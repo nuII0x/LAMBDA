@@ -1,0 +1,122 @@
+// -*- C++ -*-
+#include <cassert>
+#include <cmath>
+
+#include "../include/wexacts/wexacts.h"
+
+namespace {
+
+bool nearlyEqual(double left, double right, double epsilon = 1e-9) {
+  return std::fabs(left - right) <= epsilon;
+}
+
+}  // namespace
+
+int main() {
+  assert(wrs::gcd(18, 24) == 6);
+  assert(wrs::isPrime(13));
+
+  const wrs::reduced_fraction fraction = wrs::reduceFraction(20, 50);
+  assert(fraction.numerator == 2);
+  assert(fraction.denominator == 5);
+
+  const wrs::arithmetic_progression_summary pa = wrs::describeArithmeticProgression(2.0, 4, 3.0);
+  assert(nearlyEqual(pa.nth_term, 11.0));
+  assert(nearlyEqual(pa.sum_until_n, 26.0));
+
+  const wrs::geometric_progression_summary pg = wrs::describeGeometricProgression(3.0, 4, 2.0);
+  assert(nearlyEqual(pg.nth_term, 24.0));
+  assert(nearlyEqual(pg.sum_until_n, 45.0));
+  assert(nearlyEqual(pg.product_until_n, 5184.0));
+
+  const wrs::linear_equation_solution linear = wrs::solveLinearEquation(2.0, -8.0);
+  assert(wrs::linearEquationSolutionCount(linear) == 1);
+  assert(nearlyEqual(linear.x, 4.0));
+
+  const wrs::quadratic_solution quadratic = wrs::solveQuadraticEquation(1.0, -5.0, 6.0);
+  assert(wrs::realRootCount(quadratic) == 2);
+  assert(nearlyEqual(quadratic.x1, 3.0));
+  assert(nearlyEqual(quadratic.x2, 2.0));
+
+  const wrs::quadratic_vertex vertex = wrs::solveQuadraticVertex(1.0, -4.0, 1.0);
+  assert(nearlyEqual(vertex.x, 2.0));
+  assert(nearlyEqual(vertex.y, -3.0));
+
+  const wrs::linear_system_2x2_solution system = wrs::solveLinearSystem2x2(1.0, 1.0, 5.0, 2.0, -1.0, 4.0);
+  assert(wrs::linearSystemSolutionCount(system) == 1);
+  assert(nearlyEqual(system.x, 3.0));
+  assert(nearlyEqual(system.y, 2.0));
+
+  const wrs::explained_quadratic_solution explained = wrs::explainQuadraticEquation(1.0, -5.0, 6.0);
+  assert(!explained.steps.empty());
+
+  const wrs::explained_linear_system_2x2_solution explained_system =
+      wrs::explainLinearSystem2x2(1.0, 1.0, 5.0, 2.0, -1.0, 4.0);
+  assert(!explained_system.steps.empty());
+
+  const wrs::distance_between_points_result distance = wrs::distanceBetweenPoints(0.0, 0.0, 3.0, 4.0);
+  assert(nearlyEqual(distance.distance, 5.0));
+
+  const wrs::midpoint_result midpoint = wrs::midpointBetweenPoints(0.0, 0.0, 4.0, 2.0);
+  assert(nearlyEqual(midpoint.midpoint.x, 2.0));
+  assert(nearlyEqual(midpoint.midpoint.y, 1.0));
+
+  const std::vector<double> stats_input = {2.0, 3.0, 3.0, 5.0, 8.0};
+  const wrs::central_tendency_summary stats = wrs::describeCentralTendency(stats_input);
+  assert(nearlyEqual(stats.mean, 4.2));
+  assert(nearlyEqual(stats.median, 3.0));
+  assert(stats.has_mode);
+  assert(stats.modes.size() == 1);
+  assert(nearlyEqual(stats.modes[0], 3.0));
+
+  wrs::solve_request request;
+  request.skill_id = "algebra.quadratic.roots";
+  request.numeric_inputs["a"] = 1.0;
+  request.numeric_inputs["b"] = -5.0;
+  request.numeric_inputs["c"] = 6.0;
+  request.include_explanation = true;
+
+  const wrs::solve_response response = wrs::solveRequest(request);
+  assert(response.success);
+  assert(response.numeric_outputs.find("delta") != response.numeric_outputs.end());
+  assert(response.steps.size() == explained.steps.size());
+
+  wrs::solve_request system_request;
+  system_request.skill_id = "algebra.linear_system_2x2";
+  system_request.numeric_inputs["a1"] = 1.0;
+  system_request.numeric_inputs["b1"] = 1.0;
+  system_request.numeric_inputs["c1"] = 5.0;
+  system_request.numeric_inputs["a2"] = 2.0;
+  system_request.numeric_inputs["b2"] = -1.0;
+  system_request.numeric_inputs["c2"] = 4.0;
+
+  const wrs::solve_response system_response = wrs::solveRequest(system_request);
+  assert(system_response.success);
+  assert(nearlyEqual(system_response.numeric_outputs.find("x")->second, 3.0));
+  assert(nearlyEqual(system_response.numeric_outputs.find("y")->second, 2.0));
+
+  wrs::solve_request stats_request;
+  stats_request.skill_id = "statistics.central_tendency";
+  stats_request.numeric_list_inputs["data"] = stats_input;
+
+  const wrs::solve_response stats_response = wrs::solveRequest(stats_request);
+  assert(stats_response.success);
+  assert(nearlyEqual(stats_response.numeric_outputs.find("mean")->second, 4.2));
+  assert(stats_response.numeric_list_outputs.find("modes") != stats_response.numeric_list_outputs.end());
+
+  const wrs::math_skill* quadratic_skill = wrs::highSchoolCatalog().find("algebra.quadratic.roots");
+  assert(quadratic_skill != 0);
+  const wrs::math_skill* system_skill = wrs::highSchoolCatalog().find("algebra.linear_system_2x2");
+  assert(system_skill != 0);
+  const wrs::math_skill* stats_skill = wrs::highSchoolCatalog().find("statistics.central_tendency");
+  assert(stats_skill != 0);
+
+  wrs::matrix<double> matrix(2, 2);
+  matrix.setElement(0, 0, 1.0);
+  matrix.setElement(0, 1, 2.0);
+  matrix.setElement(1, 0, 3.0);
+  matrix.setElement(1, 1, 4.0);
+  assert(nearlyEqual(matrix.det(), -2.0));
+
+  return 0;
+}

@@ -1,22 +1,69 @@
-# Turbo-Lambda: Mathematics-Powered Artificial Artifacts
+# WExacts
 
-Welcome to Turbo-Lambda, where the power of mathematics converges with artificial artifacts!
+WExacts is a C++ mathematics engine designed to grow from a reusable library
+into a complete educational product. The project now starts with a layered
+structure:
 
-## About
-Turbo-Lambda is a project that harnesses the capabilities of advanced mathematical principles to drive the creation of artificial artifacts. This initiative explores the synergy between mathematics and artificial intelligence, unlocking innovative possibilities at the intersection of these dynamic fields.
+- `include/wexacts/core`: pure mathematical algorithms
+- `include/wexacts/education`: skill catalog, teaching metadata, explanations
+- `include/wexacts/platform`: request/response contracts for CLI or API layers
+- `apps/cli`: first command-line entry point
+- `services/api`: future HTTP service boundary
+- `tests`: smoke tests for the public surface
+- `docs`: roadmap and curriculum planning
 
-## Key Features
-- **Mathematical Foundation:** Turbo-Lambda is built upon a robust mathematical foundation, leveraging mathematical concepts to enhance the creation of artificial artifacts.
-  
-- **Artificial Intelligence:** Dive into the realm of artificial intelligence, where mathematical intricacies contribute to the development of intelligent and dynamic artifacts.
+The existing root files remain available as compatibility entry points:
 
-## Getting Started
-To explore the mathematical wonders within Turbo-Lambda, follow the instructions in the documentation to set up and engage with the project. Unleash the power of mathematical algorithms and principles as you delve into the world of artificial artifacts.
+- `arithmetic.h`
+- `arithmetic`
+- `matrix`
 
-## Contributions
-Contributions to Turbo-Lambda are welcome! Whether you are a mathematician, an AI enthusiast, or a developer, your expertise can contribute to the evolution of this project. Check out our contribution guidelines to get involved.
+## File naming
 
-## Documentation
-For detailed information on the mathematical foundations, AI methodologies, and project structure, refer to the comprehensive documentation. Get ready to embark on a journey where mathematics meets artificial intelligence.
+This repository uses `.h` for headers and no extension for source-style entry
+files, following the project convention.
 
-Let Turbo-Lambda be your gateway to a mathematically-driven exploration of artificial artifacts!
+## Current focus
+
+The current architecture is aimed at turning high-school mathematics into a
+simple, portable engine. Each skill should have:
+
+- a stable `skill_id`
+- validated inputs
+- formulas and outputs
+- an executable solver
+- step-by-step explanation data
+
+The long-term target is:
+
+1. reliable C++ math core
+2. practical CLI for local use and validation
+3. later export to WebAssembly for a public site
+
+## Suggested next phases
+
+1. Add more school skills on top of the same solver contract.
+2. Keep the CLI as the main local validation tool.
+3. Add a thin WebAssembly export layer later without changing the math core.
+4. Add unit tests for every skill and edge case.
+
+## Quick build checks
+
+Smoke test:
+
+```bash
+g++ -std=c++17 -I. -x c++ tests/smoke -o /tmp/wexacts_smoke
+/tmp/wexacts_smoke
+```
+
+CLI seed:
+
+```bash
+g++ -std=c++17 -I. -x c++ apps/cli/main -o /tmp/wexacts_cli
+/tmp/wexacts_cli
+/tmp/wexacts_cli catalog
+/tmp/wexacts_cli show algebra.quadratic.roots
+/tmp/wexacts_cli solve algebra.quadratic.roots a=1 b=-5 c=6
+/tmp/wexacts_cli solve algebra.linear_system_2x2 a1=1 b1=1 c1=5 a2=2 b2=-1 c2=4
+/tmp/wexacts_cli solve statistics.central_tendency data=2,3,3,5,8
+```

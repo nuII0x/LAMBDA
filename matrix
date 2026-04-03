@@ -1,209 +1,901 @@
 // -*- C++ -*-
-//--->WMatrix list<---//
-/*Made by Wahh R. S.*/
-#ifndef WMATRIX_
-#define WMATRIX_
-#include <vector>
-#include <cmath>
-#include <iomanip>
-#include "../WCore/wrs"
-namespace wrs
-{
-	using std::vector;
-	using std::pow;
-	using std::setw;
-	using std::ostream;
-	using std::istream;
-	template < class T > class matrix
-	{
-		vector < vector < T >> MATRIX;
-	  public:
-		matrix();
-		matrix(const matrix < T > &);
-		  matrix(int, int);
-		const int line() const;
-		const int column() const;
-		int erase_line(int);
-		int erase_column(int);
-		T det() const;
-		T cof(int, int) const;
-		T getElement(int, int) const;
-		void setElement(int, int, const T &);
-		  template < class U > friend bool operator ==(const matrix < U > &, const matrix < U > &);
-		  template < class U > friend ostream & operator <<(ostream &, const matrix < U > &);
-		  template < class U > friend istream & operator >>(istream &, matrix < U > &);
-		const matrix < T > operator +(const matrix < T > &) const;
-		const matrix < T > operator -(const matrix < T > &) const;
-		const matrix < T > operator *(const matrix < T > &) const;
-		const matrix < T > operator *(const T &) const;
-		const matrix < T > operator   -() const;
-		  vector < T > &operator [] (int);
-		const vector < T > &operator[] (int)const;
-	};
-	template < class T > matrix < T >::matrix()
-	{
-		MATRIX.push_back(vector < T > ());
-		MATRIX[0].push_back(T());
-	}
-	template < class T > matrix < T >::matrix(const matrix < T > &another):MATRIX(another.MATRIX)
-	{
-	}
-	template < class T > matrix < T >::matrix(int m, int n)
-	{
-		for (int i = 0; i < m; i++)
-		{
-			MATRIX.push_back(vector < T > ());
-			for (int j = 0; j < n; j++)
-				MATRIX[MATRIX.size() - 1].push_back(T());
-		}
-	}
-	template < class T > const int matrix < T >::line() const
-	{
-		return MATRIX.size();
-	}
-	template < class T > const int matrix < T >::column() const
-	{
-		return MATRIX[0].size();
-	}
-	template < class T > int matrix < T >::erase_line(int index)
-	{
-		MATRIX.erase(MATRIX.begin() + index);
-		return MATRIX.capacity();
-	}
-	template < class T > int matrix < T >::erase_column(int index)
-	{
-		for (int i = 0; i < MATRIX.size(); i++)
-		{
-			MATRIX[i].erase(MATRIX[i].begin() + index);
-		}
-		return MATRIX[0].capacity();
-	}
-	template < class T > T matrix < T >::det()const
-	{
-		T determinant;
-		if (line() == column() && line() == 1)
-		{
-			determinant = MATRIX[0][0];
-		}
-		else if (line() == column() && line() == 2)
-		{
-			determinant = (MATRIX[0][0] * MATRIX[1][1]) - (MATRIX[0][1] * MATRIX[1][0]);
-		}
-		else if (line() == column() && line() >= 2)
-		{
-			determinant = T();
-			for (int i = 0; i < column(); i++)
-			{
-				determinant += MATRIX[0][i] * cof(0, i);
-			}
-		}
-		return determinant;
-	}
-	template < class T > T matrix < T >::cof(int i, int j)const
-	{
-		matrix < T > DOWN(*this);
-		DOWN.erase_line(i);
-		DOWN.erase_column(j);
-		return pow(-1, (i + j)) * DOWN.det();
-	}
-	template < class T > T matrix < T >::getElement(int i, int j) const
-	{
-		return MATRIX[i][j];
-	}
-	template < class T > void matrix < T >::setElement(int i, int j, const T & element)
-	{
-		MATRIX[i][j] = element;
-	}
+#ifndef WMATRIX_H
+#define WMATRIX_H
 
-	template < class T > bool operator ==(const matrix < T > &A, const matrix < T > &B)
-	{
-		if (A.line() == B.line() && A.column() == B.column())
-		{
-			for (int i = 0; i < A.line(); i++)
-			{
-				for (int j = 0; j < A.column(); j++)
-				{
-					if (A[i][j] != B[i][j])
-						return false;
-					else;
-				}
-			}
-			return true;
-		}
-		else
-			return false;
-	}
-	template < class U > ostream & operator <<(ostream & out, const matrix < U > &o)
-	{
-		// TEMPORARY
-		for (int i = 0; i < o.line(); i++)
-		{
-			out << '|';
-			for (int j = 0; j < o.column(); j++)
-				out << setw(4) << o[i][j];
-			out << setw(1) << '|' << endl;
-		}
-		return out;
-	}
-	template < class T > istream & operator >>(istream & in, matrix < T > &o)
-	{
-		for (int i = 0; i < o.line(); i++)
-			for (int j = 0; j < o.column(); j++)
-				in >> o.MATRIX[i][j];
-		return in;
-	}
-	template < class T > const matrix < T > matrix < T >::operator +(const matrix < T > &B) const
-	{
-		int m(line()), n(column());
-		  matrix < T > C(m, n);
-		for (int i = 0; i < m; i++)
-		{
-			for (int j = 0; j < n; j++)
-			{
-				C[i][j] = MATRIX[i][j] + B[i][j];
-			}
-		}
-		return C;
-	}
-	template < class T > const matrix < T > matrix < T >::operator *(const matrix < T > &B) const
-	{
-		// m == n.
-		int m(line()), n(B.column()), p(B.line());
-		  matrix < T > C(m, n);
-		for (int i = 0; i < m; i++)
-			for (int j = 0; j < n; j++)
-				for (int k = 0; k < p; k++)
-					  C[i][j] += MATRIX[i][k] * B[k][j];
-		  return C;
-	}
-	template < class T > const matrix < T > matrix < T >::operator -(const matrix < T > &B) const
-	{
-		return *this + (-B);
-	}
-	template < class T > const matrix < T > matrix < T >::operator -() const
-	{
-		matrix < T > B(line(), column());
-		for (int i = 0; i < line(); i++)
-			for (int j = 0; j < column(); j++)
-				B[i][j] = -MATRIX[i][j];
-		return B;
-	}
-	template < class T > const matrix < T > matrix < T >::operator *(const T & o) const
-	{
-		matrix < T > B(line(), column());
-		for (int i = 0; i < line(); i++)
-			for (int j = 0; j < column(); j++)
-				B[i][j] = o * MATRIX[i][j];
-		return B;
-	}
-	template < class T > vector < T > &matrix < T >::operator [] (int index)
-	{
-		return MATRIX[index];
-	}
-	template < class T > const vector < T > &matrix < T >::operator[] (int index)const
-	{
-		return MATRIX[index];
-	}
+#include <iomanip>
+#include <istream>
+#include <ostream>
+#include <stdexcept>
+#include <vector>
+
+namespace wrs {
+
+// A matrix is a rectangular table of values.
+// This class is designed as an educational foundation for common matrix
+// operations used in algebra, geometry, scientific computing and data work.
+// Example:
+//   wrs::matrix<double> m(2, 2);
+//   m.setElement(0, 0, 1.0);
+//   m.setElement(0, 1, 2.0);
+//   m.setElement(1, 0, 3.0);
+//   m.setElement(1, 1, 4.0);
+template <class T>
+class matrix {
+ public:
+  // Creates a 1x1 matrix filled with the default value of `T`.
+  matrix();
+
+  // Creates a copy of another matrix.
+  matrix(const matrix<T>& another);
+
+  // Creates a matrix with `m` rows and `n` columns.
+  // Every element starts with the default value of `T`.
+  matrix(int m, int n);
+
+  // Builds a matrix directly from nested vectors.
+  // Every row must have the same number of columns.
+  explicit matrix(const std::vector<std::vector<T>>& values);
+
+  // Creates an identity matrix: diagonal = 1, everything else = 0.
+  // Example for size 3:
+  //   1 0 0
+  //   0 1 0
+  //   0 0 1
+  static matrix<T> identity(int size);
+
+  // Returns the number of rows.
+  int line() const;
+
+  // Returns the number of columns.
+  int column() const;
+
+  // Returns `true` when rows == columns.
+  bool is_square() const;
+
+  // Checks if every element is exactly zero.
+  bool is_zero() const;
+
+  // Checks if the matrix matches the identity matrix.
+  bool is_identity() const;
+
+  // Checks whether the matrix equals its transpose.
+  bool is_symmetric() const;
+
+  // Checks whether all elements below the diagonal are zero.
+  bool is_upper_triangular() const;
+
+  // Checks whether all elements above the diagonal are zero.
+  bool is_lower_triangular() const;
+
+  // Removes one row and returns the new number of rows.
+  int erase_line(int index);
+
+  // Removes one column and returns the new number of columns.
+  int erase_column(int index);
+
+  // Returns a matrix made by removing one row and one column.
+  // This is the "minor matrix" used in determinant and cofactor formulas.
+  matrix<T> minor_matrix(int row_to_remove, int column_to_remove) const;
+
+  // Returns the transpose: rows become columns.
+  matrix<T> transpose() const;
+
+  // Returns part of the matrix as a new matrix.
+  // The end positions are exclusive, just like many programming slices.
+  matrix<T> submatrix(int row_begin, int row_end, int column_begin, int column_end) const;
+
+  // Places another matrix to the right of this one.
+  // Useful for algorithms such as Gauss-Jordan elimination.
+  matrix<T> augment(const matrix<T>& right) const;
+
+  // Returns the determinant.
+  // Only valid for square matrices.
+  T det() const;
+
+  // Returns the trace: the sum of the main diagonal.
+  T trace() const;
+
+  // Returns the cofactor of position `(i, j)`.
+  T cof(int i, int j) const;
+
+  // Returns the matrix of cofactors.
+  matrix<T> cofactor_matrix() const;
+
+  // Returns the adjugate (also called adjoint).
+  // This is the transpose of the cofactor matrix.
+  matrix<T> adjugate() const;
+
+  // Returns the inverse matrix using Gauss-Jordan elimination.
+  // This requires a square and invertible matrix.
+  matrix<T> inverse() const;
+
+  // Returns the matrix raised to a non-negative integer power.
+  // Power 0 returns the identity matrix.
+  matrix<T> power(unsigned int exponent) const;
+
+  // Returns the row echelon form (REF).
+  // This is useful for solving systems and finding rank.
+  matrix<T> row_echelon() const;
+
+  // Returns the reduced row echelon form (RREF).
+  // This is a more simplified version of row echelon form.
+  matrix<T> reduced_row_echelon() const;
+
+  // Returns the rank: the number of linearly independent rows.
+  int rank() const;
+
+  // Reads one element at row `i` and column `j`.
+  T getElement(int i, int j) const;
+
+  // Writes one element at row `i` and column `j`.
+  void setElement(int i, int j, const T& element);
+
+  // Swaps two rows.
+  void swap_rows(int first, int second);
+
+  // Multiplies one row by a scalar.
+  void scale_row(int row, const T& scalar);
+
+  // Adds `scalar * source_row` to `target_row`.
+  void add_row_multiple(int source_row, int target_row, const T& scalar);
+
+  template <class U>
+  friend bool operator==(const matrix<U>& A, const matrix<U>& B);
+
+  template <class U>
+  friend bool operator!=(const matrix<U>& A, const matrix<U>& B);
+
+  template <class U>
+  friend std::ostream& operator<<(std::ostream& out, const matrix<U>& o);
+
+  template <class U>
+  friend std::istream& operator>>(std::istream& in, matrix<U>& o);
+
+  // Adds two matrices of the same size.
+  matrix<T> operator+(const matrix<T>& other) const;
+
+  // Subtracts two matrices of the same size.
+  matrix<T> operator-(const matrix<T>& other) const;
+
+  // Multiplies two matrices when dimensions are compatible.
+  matrix<T> operator*(const matrix<T>& other) const;
+
+  // Multiplies every element by a scalar.
+  matrix<T> operator*(const T& scalar) const;
+
+  // Divides every element by a scalar.
+  matrix<T> operator/(const T& scalar) const;
+
+  // Returns a matrix with every sign inverted.
+  matrix<T> operator-() const;
+
+  // Compound assignment forms of the basic operations.
+  matrix<T>& operator+=(const matrix<T>& other);
+  matrix<T>& operator-=(const matrix<T>& other);
+  matrix<T>& operator*=(const T& scalar);
+  matrix<T>& operator/=(const T& scalar);
+
+  // Gives direct access to a row, so `m[0][1]` means row 0, column 1.
+  std::vector<T>& operator[](int index);
+
+  // Read-only access to a row.
+  const std::vector<T>& operator[](int index) const;
+
+ private:
+  void validate_index(int i, int j) const;
+  void validate_row(int row) const;
+  void validate_column(int column_index) const;
+  void validate_same_shape(const matrix<T>& other, const char* operation_name) const;
+  int find_pivot_row(int start_row, int pivot_column) const;
+
+  std::vector<std::vector<T>> data_;
+};
+
+template <class T>
+matrix<T>::matrix() : data_(1, std::vector<T>(1, T())) {}
+
+template <class T>
+matrix<T>::matrix(const matrix<T>& another) : data_(another.data_) {}
+
+template <class T>
+matrix<T>::matrix(int m, int n) {
+  if (m <= 0 || n <= 0) {
+    throw std::invalid_argument("matrix dimensions must be positive");
+  }
+
+  data_.assign(m, std::vector<T>(n, T()));
 }
-	// WRS namespace
-#endif /* WMatrix */
+
+template <class T>
+matrix<T>::matrix(const std::vector<std::vector<T>>& values) : data_(values) {
+  if (values.empty() || values.front().empty()) {
+    throw std::invalid_argument("matrix values must not be empty");
+  }
+
+  const int expected_columns = static_cast<int>(values.front().size());
+  for (int i = 0; i < static_cast<int>(values.size()); ++i) {
+    if (static_cast<int>(values[i].size()) != expected_columns) {
+      throw std::invalid_argument("all matrix rows must have the same size");
+    }
+  }
+}
+
+template <class T>
+matrix<T> matrix<T>::identity(int size) {
+  if (size <= 0) {
+    throw std::invalid_argument("identity size must be positive");
+  }
+
+  matrix<T> result(size, size);
+  for (int i = 0; i < size; ++i) {
+    result[i][i] = T(1);
+  }
+  return result;
+}
+
+template <class T>
+int matrix<T>::line() const {
+  return static_cast<int>(data_.size());
+}
+
+template <class T>
+int matrix<T>::column() const {
+  return static_cast<int>(data_.front().size());
+}
+
+template <class T>
+bool matrix<T>::is_square() const {
+  return line() == column();
+}
+
+template <class T>
+bool matrix<T>::is_zero() const {
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      if (data_[i][j] != T()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <class T>
+bool matrix<T>::is_identity() const {
+  if (!is_square()) {
+    return false;
+  }
+
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      const T expected = (i == j) ? T(1) : T();
+      if (data_[i][j] != expected) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <class T>
+bool matrix<T>::is_symmetric() const {
+  if (!is_square()) {
+    return false;
+  }
+
+  for (int i = 0; i < line(); ++i) {
+    for (int j = i + 1; j < column(); ++j) {
+      if (data_[i][j] != data_[j][i]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <class T>
+bool matrix<T>::is_upper_triangular() const {
+  if (!is_square()) {
+    return false;
+  }
+
+  for (int i = 1; i < line(); ++i) {
+    for (int j = 0; j < i; ++j) {
+      if (data_[i][j] != T()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <class T>
+bool matrix<T>::is_lower_triangular() const {
+  if (!is_square()) {
+    return false;
+  }
+
+  for (int i = 0; i < line(); ++i) {
+    for (int j = i + 1; j < column(); ++j) {
+      if (data_[i][j] != T()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <class T>
+int matrix<T>::erase_line(int index) {
+  validate_row(index);
+  if (line() == 1) {
+    throw std::invalid_argument("matrix must keep at least one line");
+  }
+
+  data_.erase(data_.begin() + index);
+  return line();
+}
+
+template <class T>
+int matrix<T>::erase_column(int index) {
+  validate_column(index);
+  if (column() == 1) {
+    throw std::invalid_argument("matrix must keep at least one column");
+  }
+
+  for (int i = 0; i < line(); ++i) {
+    data_[i].erase(data_[i].begin() + index);
+  }
+  return column();
+}
+
+template <class T>
+matrix<T> matrix<T>::minor_matrix(int row_to_remove, int column_to_remove) const {
+  validate_index(row_to_remove, column_to_remove);
+  if (line() == 1 || column() == 1) {
+    throw std::invalid_argument("cannot build a minor from a 1x1 matrix");
+  }
+
+  matrix<T> result(line() - 1, column() - 1);
+  int result_row = 0;
+  for (int i = 0; i < line(); ++i) {
+    if (i == row_to_remove) {
+      continue;
+    }
+
+    int result_column = 0;
+    for (int j = 0; j < column(); ++j) {
+      if (j == column_to_remove) {
+        continue;
+      }
+
+      result[result_row][result_column] = data_[i][j];
+      ++result_column;
+    }
+    ++result_row;
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::transpose() const {
+  matrix<T> result(column(), line());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      result[j][i] = data_[i][j];
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::submatrix(int row_begin, int row_end, int column_begin, int column_end) const {
+  if (row_begin < 0 || column_begin < 0 || row_end > line() || column_end > column() ||
+      row_begin >= row_end || column_begin >= column_end) {
+    throw std::invalid_argument("invalid submatrix bounds");
+  }
+
+  matrix<T> result(row_end - row_begin, column_end - column_begin);
+  for (int i = row_begin; i < row_end; ++i) {
+    for (int j = column_begin; j < column_end; ++j) {
+      result[i - row_begin][j - column_begin] = data_[i][j];
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::augment(const matrix<T>& right) const {
+  if (line() != right.line()) {
+    throw std::invalid_argument("augmented matrices must have the same number of rows");
+  }
+
+  matrix<T> result(line(), column() + right.column());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      result[i][j] = data_[i][j];
+    }
+    for (int j = 0; j < right.column(); ++j) {
+      result[i][column() + j] = right[i][j];
+    }
+  }
+  return result;
+}
+
+template <class T>
+T matrix<T>::det() const {
+  if (!is_square()) {
+    throw std::invalid_argument("determinant requires a square matrix");
+  }
+
+  if (line() == 1) {
+    return data_[0][0];
+  }
+
+  if (line() == 2) {
+    return (data_[0][0] * data_[1][1]) - (data_[0][1] * data_[1][0]);
+  }
+
+  T determinant = T();
+  for (int i = 0; i < column(); ++i) {
+    determinant += data_[0][i] * cof(0, i);
+  }
+  return determinant;
+}
+
+template <class T>
+T matrix<T>::trace() const {
+  if (!is_square()) {
+    throw std::invalid_argument("trace requires a square matrix");
+  }
+
+  T result = T();
+  for (int i = 0; i < line(); ++i) {
+    result += data_[i][i];
+  }
+  return result;
+}
+
+template <class T>
+T matrix<T>::cof(int i, int j) const {
+  validate_index(i, j);
+  if (!is_square()) {
+    throw std::invalid_argument("cofactor requires a square matrix");
+  }
+
+  if (line() == 1) {
+    return T(1);
+  }
+
+  const T sign = ((i + j) % 2 == 0) ? T(1) : T(-1);
+  return sign * minor_matrix(i, j).det();
+}
+
+template <class T>
+matrix<T> matrix<T>::cofactor_matrix() const {
+  if (!is_square()) {
+    throw std::invalid_argument("cofactor matrix requires a square matrix");
+  }
+
+  matrix<T> result(line(), column());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      result[i][j] = cof(i, j);
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::adjugate() const {
+  return cofactor_matrix().transpose();
+}
+
+template <class T>
+matrix<T> matrix<T>::inverse() const {
+  if (!is_square()) {
+    throw std::invalid_argument("inverse requires a square matrix");
+  }
+
+  matrix<T> working = augment(identity(line()));
+  const int n = line();
+
+  for (int pivot_column = 0; pivot_column < n; ++pivot_column) {
+    const int pivot_row = working.find_pivot_row(pivot_column, pivot_column);
+    if (pivot_row == -1) {
+      throw std::invalid_argument("matrix is singular and has no inverse");
+    }
+
+    if (pivot_row != pivot_column) {
+      working.swap_rows(pivot_row, pivot_column);
+    }
+
+    const T pivot_value = working[pivot_column][pivot_column];
+    if (pivot_value == T()) {
+      throw std::invalid_argument("matrix is singular and has no inverse");
+    }
+
+    working.scale_row(pivot_column, T(1) / pivot_value);
+
+    for (int row = 0; row < n; ++row) {
+      if (row == pivot_column) {
+        continue;
+      }
+
+      const T factor = working[row][pivot_column];
+      if (factor != T()) {
+        working.add_row_multiple(pivot_column, row, -factor);
+      }
+    }
+  }
+
+  return working.submatrix(0, n, n, 2 * n);
+}
+
+template <class T>
+matrix<T> matrix<T>::power(unsigned int exponent) const {
+  if (!is_square()) {
+    throw std::invalid_argument("matrix power requires a square matrix");
+  }
+
+  matrix<T> result = identity(line());
+  matrix<T> base(*this);
+  unsigned int current_exponent = exponent;
+
+  while (current_exponent > 0) {
+    if (current_exponent % 2 == 1) {
+      result = result * base;
+    }
+    current_exponent /= 2;
+    if (current_exponent > 0) {
+      base = base * base;
+    }
+  }
+
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::row_echelon() const {
+  matrix<T> result(*this);
+  int pivot_row = 0;
+
+  for (int pivot_column = 0; pivot_column < result.column() && pivot_row < result.line(); ++pivot_column) {
+    const int best_row = result.find_pivot_row(pivot_row, pivot_column);
+    if (best_row == -1) {
+      continue;
+    }
+
+    if (best_row != pivot_row) {
+      result.swap_rows(best_row, pivot_row);
+    }
+
+    for (int row = pivot_row + 1; row < result.line(); ++row) {
+      const T pivot_value = result[pivot_row][pivot_column];
+      if (pivot_value == T()) {
+        continue;
+      }
+
+      const T factor = result[row][pivot_column] / pivot_value;
+      if (factor != T()) {
+        result.add_row_multiple(pivot_row, row, -factor);
+      }
+    }
+
+    ++pivot_row;
+  }
+
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::reduced_row_echelon() const {
+  matrix<T> result(*this);
+  int pivot_row = 0;
+
+  for (int pivot_column = 0; pivot_column < result.column() && pivot_row < result.line(); ++pivot_column) {
+    const int best_row = result.find_pivot_row(pivot_row, pivot_column);
+    if (best_row == -1) {
+      continue;
+    }
+
+    if (best_row != pivot_row) {
+      result.swap_rows(best_row, pivot_row);
+    }
+
+    const T pivot_value = result[pivot_row][pivot_column];
+    if (pivot_value == T()) {
+      continue;
+    }
+
+    result.scale_row(pivot_row, T(1) / pivot_value);
+
+    for (int row = 0; row < result.line(); ++row) {
+      if (row == pivot_row) {
+        continue;
+      }
+
+      const T factor = result[row][pivot_column];
+      if (factor != T()) {
+        result.add_row_multiple(pivot_row, row, -factor);
+      }
+    }
+
+    ++pivot_row;
+  }
+
+  return result;
+}
+
+template <class T>
+int matrix<T>::rank() const {
+  const matrix<T> reduced = reduced_row_echelon();
+  int non_zero_rows = 0;
+
+  for (int i = 0; i < reduced.line(); ++i) {
+    bool row_has_non_zero = false;
+    for (int j = 0; j < reduced.column(); ++j) {
+      if (reduced[i][j] != T()) {
+        row_has_non_zero = true;
+        break;
+      }
+    }
+
+    if (row_has_non_zero) {
+      ++non_zero_rows;
+    }
+  }
+
+  return non_zero_rows;
+}
+
+template <class T>
+T matrix<T>::getElement(int i, int j) const {
+  validate_index(i, j);
+  return data_[i][j];
+}
+
+template <class T>
+void matrix<T>::setElement(int i, int j, const T& element) {
+  validate_index(i, j);
+  data_[i][j] = element;
+}
+
+template <class T>
+void matrix<T>::swap_rows(int first, int second) {
+  validate_row(first);
+  validate_row(second);
+
+  if (first == second) {
+    return;
+  }
+
+  const std::vector<T> temporary = data_[first];
+  data_[first] = data_[second];
+  data_[second] = temporary;
+}
+
+template <class T>
+void matrix<T>::scale_row(int row, const T& scalar) {
+  validate_row(row);
+  for (int j = 0; j < column(); ++j) {
+    data_[row][j] *= scalar;
+  }
+}
+
+template <class T>
+void matrix<T>::add_row_multiple(int source_row, int target_row, const T& scalar) {
+  validate_row(source_row);
+  validate_row(target_row);
+  for (int j = 0; j < column(); ++j) {
+    data_[target_row][j] += data_[source_row][j] * scalar;
+  }
+}
+
+template <class T>
+void matrix<T>::validate_index(int i, int j) const {
+  validate_row(i);
+  validate_column(j);
+}
+
+template <class T>
+void matrix<T>::validate_row(int row) const {
+  if (row < 0 || row >= line()) {
+    throw std::out_of_range("row index out of range");
+  }
+}
+
+template <class T>
+void matrix<T>::validate_column(int column_index) const {
+  if (column_index < 0 || column_index >= column()) {
+    throw std::out_of_range("column index out of range");
+  }
+}
+
+template <class T>
+void matrix<T>::validate_same_shape(const matrix<T>& other, const char* operation_name) const {
+  if (line() != other.line() || column() != other.column()) {
+    throw std::invalid_argument(operation_name);
+  }
+}
+
+template <class T>
+int matrix<T>::find_pivot_row(int start_row, int pivot_column) const {
+  for (int row = start_row; row < line(); ++row) {
+    if (data_[row][pivot_column] != T()) {
+      return row;
+    }
+  }
+  return -1;
+}
+
+template <class T>
+bool operator==(const matrix<T>& A, const matrix<T>& B) {
+  return A.data_ == B.data_;
+}
+
+template <class T>
+bool operator!=(const matrix<T>& A, const matrix<T>& B) {
+  return !(A == B);
+}
+
+template <class U>
+// Prints the matrix in a simple text format.
+// This lets you do: `std::cout << my_matrix;`
+std::ostream& operator<<(std::ostream& out, const matrix<U>& o) {
+  for (int i = 0; i < o.line(); ++i) {
+    out << '|';
+    for (int j = 0; j < o.column(); ++j) {
+      out << std::setw(8) << o.data_[i][j];
+    }
+    out << " |\n";
+  }
+  return out;
+}
+
+template <class T>
+// Reads matrix values from an input stream.
+// This lets you do: `std::cin >> my_matrix;`
+std::istream& operator>>(std::istream& in, matrix<T>& o) {
+  for (int i = 0; i < o.line(); ++i) {
+    for (int j = 0; j < o.column(); ++j) {
+      in >> o.data_[i][j];
+    }
+  }
+  return in;
+}
+
+template <class T>
+matrix<T> matrix<T>::operator+(const matrix<T>& other) const {
+  validate_same_shape(other, "matrix addition requires equal dimensions");
+
+  matrix<T> result(line(), column());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      result[i][j] = data_[i][j] + other[i][j];
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::operator-(const matrix<T>& other) const {
+  validate_same_shape(other, "matrix subtraction requires equal dimensions");
+
+  matrix<T> result(line(), column());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      result[i][j] = data_[i][j] - other[i][j];
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::operator*(const matrix<T>& other) const {
+  if (column() != other.line()) {
+    throw std::invalid_argument("matrix multiplication requires compatible dimensions");
+  }
+
+  matrix<T> result(line(), other.column());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < other.column(); ++j) {
+      for (int k = 0; k < column(); ++k) {
+        result[i][j] += data_[i][k] * other[k][j];
+      }
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::operator*(const T& scalar) const {
+  matrix<T> result(*this);
+  result *= scalar;
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::operator/(const T& scalar) const {
+  matrix<T> result(*this);
+  result /= scalar;
+  return result;
+}
+
+template <class T>
+matrix<T> matrix<T>::operator-() const {
+  matrix<T> result(line(), column());
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      result[i][j] = -data_[i][j];
+    }
+  }
+  return result;
+}
+
+template <class T>
+matrix<T>& matrix<T>::operator+=(const matrix<T>& other) {
+  validate_same_shape(other, "matrix addition requires equal dimensions");
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      data_[i][j] += other[i][j];
+    }
+  }
+  return *this;
+}
+
+template <class T>
+matrix<T>& matrix<T>::operator-=(const matrix<T>& other) {
+  validate_same_shape(other, "matrix subtraction requires equal dimensions");
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      data_[i][j] -= other[i][j];
+    }
+  }
+  return *this;
+}
+
+template <class T>
+matrix<T>& matrix<T>::operator*=(const T& scalar) {
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      data_[i][j] *= scalar;
+    }
+  }
+  return *this;
+}
+
+template <class T>
+matrix<T>& matrix<T>::operator/=(const T& scalar) {
+  if (scalar == T()) {
+    throw std::invalid_argument("matrix division by zero scalar is not allowed");
+  }
+
+  for (int i = 0; i < line(); ++i) {
+    for (int j = 0; j < column(); ++j) {
+      data_[i][j] /= scalar;
+    }
+  }
+  return *this;
+}
+
+template <class T>
+std::vector<T>& matrix<T>::operator[](int index) {
+  validate_row(index);
+  return data_[index];
+}
+
+template <class T>
+const std::vector<T>& matrix<T>::operator[](int index) const {
+  validate_row(index);
+  return data_[index];
+}
+
+template <class T>
+matrix<T> operator*(const T& scalar, const matrix<T>& value) {
+  return value * scalar;
+}
+
+}  // namespace wrs
+
+#endif  // WMATRIX_H

@@ -1,0 +1,187 @@
+// -*- C++ -*-
+#include <cstdlib>
+#include <exception>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "../../include/wexacts/wexacts.h"
+
+namespace {
+
+bool startsWith(const std::string& value, const std::string& prefix) {
+  return value.size() >= prefix.size() && value.compare(0, prefix.size(), prefix) == 0;
+}
+
+void printUsage() {
+  std::cout << "WExacts CLI\n";
+  std::cout << "usage:\n";
+  std::cout << "  catalog [area]\n";
+  std::cout << "  show <skill_id>\n";
+  std::cout << "  solve <skill_id> key=value ...\n";
+  std::cout << "\n";
+  std::cout << "examples:\n";
+  std::cout << "  solve algebra.quadratic.roots a=1 b=-5 c=6\n";
+  std::cout << "  solve algebra.linear_system_2x2 a1=1 b1=1 c1=5 a2=2 b2=-1 c2=4\n";
+  std::cout << "  solve statistics.central_tendency data=2,3,3,5,8\n";
+}
+
+void printSkill(const wrs::math_skill& skill) {
+  std::cout << "id: " << skill.id << "\n";
+  std::cout << "title: " << skill.title << "\n";
+  std::cout << "area: " << skill.area << "\n";
+  std::cout << "status: " << wrs::skillStatusName(skill.status) << "\n";
+  std::cout << "summary: " << skill.summary << "\n";
+
+  std::cout << "inputs:";
+  for (std::vector<std::string>::const_iterator it = skill.required_inputs.begin();
+       it != skill.required_inputs.end();
+       ++it) {
+    std::cout << " " << *it;
+  }
+  std::cout << "\n";
+
+  std::cout << "outputs:";
+  for (std::vector<std::string>::const_iterator it = skill.outputs.begin(); it != skill.outputs.end(); ++it) {
+    std::cout << " " << *it;
+  }
+  std::cout << "\n";
+
+  if (!skill.formulas.empty()) {
+    std::cout << "formulas:\n";
+    for (std::vector<std::string>::const_iterator it = skill.formulas.begin(); it != skill.formulas.end(); ++it) {
+      std::cout << "  - " << *it << "\n";
+    }
+  }
+
+  if (!skill.validation_rules.empty()) {
+    std::cout << "validation:\n";
+    for (std::vector<std::string>::const_iterator it = skill.validation_rules.begin();
+         it != skill.validation_rules.end();
+         ++it) {
+      std::cout << "  - " << *it << "\n";
+    }
+  }
+}
+
+bool parseArgument(const std::string& token, wrs::solve_request& request) {
+  const std::size_t separator = token.find('=');
+  if (separator == std::string::npos || separator == 0 || separator == token.size() - 1) {
+    return false;
+  }
+
+  const std::string key = token.substr(0, separator);
+  const std::string value = token.substr(separator + 1);
+  if (value.find(',') != std::string::npos) {
+    std::vector<double> list;
+    std::size_t begin = 0;
+    while (begin < value.size()) {
+      const std::size_t comma = value.find(',', begin);
+      const std::string item = value.substr(begin, comma == std::string::npos ? std::string::npos : comma - begin);
+      list.push_back(std::stod(item));
+      if (comma == std::string::npos) {
+        break;
+      }
+      begin = comma + 1;
+    }
+    request.numeric_list_inputs[key] = list;
+    return true;
+  }
+
+  request.numeric_inputs[key] = std::stod(value);
+  return true;
+}
+
+void printResponse(const wrs::solve_response& response) {
+  std::cout << response.message << "\n";
+  for (std::map<std::string, double>::const_iterator it = response.numeric_outputs.begin();
+       it != response.numeric_outputs.end();
+       ++it) {
+    std::cout << it->first << " = " << it->second << "\n";
+  }
+  for (std::map<std::string, std::vector<double>>::const_iterator it = response.numeric_list_outputs.begin();
+       it != response.numeric_list_outputs.end();
+       ++it) {
+    std::cout << it->first << " = " << wrs::formatNumberList(it->second) << "\n";
+  }
+  for (std::vector<wrs::solution_step>::const_iterator it = response.steps.begin();
+       it != response.steps.end();
+       ++it) {
+    std::cout << "- " << it->title << ": " << it->expression << "\n";
+  }
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+  try {
+    if (argc == 1) {
+      printUsage();
+      return 0;
+    }
+
+    const std::string command = argv[1];
+    if (command == "catalog") {
+      const std::string filter_area = argc >= 3 ? argv[2] : "";
+      const std::vector<wrs::math_skill>& skills = wrs::highSchoolCatalog().all();
+      for (std::vector<wrs::math_skill>::const_iterator it = skills.begin(); it != skills.end(); ++it) {
+        if (!filter_area.empty() && it->area != filter_area) {
+          continue;
+        }
+        std::cout << it->id << " | " << it->title << " | " << wrs::skillStatusName(it->status) << "\n";
+      }
+      return 0;
+    }
+
+    if (command == "show" && argc == 3) {
+      const wrs::math_skill* skill = wrs::highSchoolCatalog().find(argv[2]);
+      if (skill == 0) {
+        std::cerr << "Unknown skill id.\n";
+        return 1;
+      }
+
+      printSkill(*skill);
+      return 0;
+    }
+
+    if (command == "solve" && argc >= 3) {
+      wrs::solve_request request;
+      request.skill_id = argv[2];
+      request.include_explanation = true;
+
+      for (int i = 3; i < argc; ++i) {
+        if (std::string(argv[i]) == "--no-steps") {
+          request.include_explanation = false;
+          continue;
+        }
+
+        if (!parseArgument(argv[i], request)) {
+          std::cerr << "Invalid argument: " << argv[i] << "\n";
+          return 1;
+        }
+      }
+
+      const wrs::solve_response response = wrs::solveRequest(request);
+      if (!response.success) {
+        std::cerr << response.message << "\n";
+        return 1;
+      }
+
+      printResponse(response);
+      return 0;
+    }
+
+    if (startsWith(command, "help")) {
+      printUsage();
+      return 0;
+    }
+
+    std::cerr << "Unknown command.\n\n";
+    printUsage();
+    return 1;
+  } catch (const std::exception& error) {
+    std::cerr << error.what() << "\n";
+    return 1;
+  }
+}
