@@ -1,4 +1,4 @@
-Warm: This project is not ready at the moment, it's only a skeleton of the intended purpose.
+Warn: This project is not ready at the moment, it's only a skeleton of the intended purpose.
 # WExacts
 
 WExacts is a C++ mathematics engine designed to grow from a reusable library
