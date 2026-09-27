@@ -1,3 +1,4 @@
+Warm: This project is not ready at the momento, it's only a skeleton of the intended purpose.
 # WExacts
 
 WExacts is a C++ mathematics engine designed to grow from a reusable library
